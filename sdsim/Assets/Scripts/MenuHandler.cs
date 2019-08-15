@@ -23,6 +23,9 @@ public class MenuHandler : MonoBehaviour {
         Application.targetFrameRate = 60;
 
         stopPanel.SetActive(false);
+		if(carJSControl != null)
+			carJSControl.SetActive(true);
+		Debug.Log("MenuHandler Awake done");
     }
 
 	public void OnPidGenerateTrainingData()
@@ -47,6 +50,7 @@ public class MenuHandler : MonoBehaviour {
 			carJSControl.SetActive(true);
 	
 		Logger.SetActive(true);
+		
 		menuPanel.SetActive(false);
         stopPanel.SetActive(true);
     }
@@ -102,15 +106,16 @@ public class MenuHandler : MonoBehaviour {
         if (PIDContoller != null)
             PIDContoller.SetActive(false);
 
-        if (carJSControl != null)
-            carJSControl.SetActive(false);
+        // if (carJSControl != null)
+            // carJSControl.SetActive(false);
 
         Logger.SetActive(false);
         NetworkSteering.SetActive(false);
 
-
+		Debug.Log("OnStop changing panels");
         menuPanel.SetActive(true);
         stopPanel.SetActive(false);
+		Debug.Log("OnStop done");
     }
 
 }

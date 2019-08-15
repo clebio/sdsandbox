@@ -72,7 +72,6 @@ public class Car : MonoBehaviour, ICar {
 	{
 		requestTorque = val;
 		requestBrake = 0f;
-		//Debug.Log("request throttle: " + val);
 	}
 
     public void SetMaxSteering(float val)
@@ -175,7 +174,7 @@ public class Car : MonoBehaviour, ICar {
 
 	public void RequestHandBrake(float val)
 	{
-		//todo
+		requestBrake = maxTorque;
 	}
 	
 	// Update is called once per frame
@@ -204,6 +203,7 @@ public class Car : MonoBehaviour, ICar {
         float brake = requestBrake;
 
 
+		Debug.Log("throttle: " + throttle + "brake: " + brake);
 		//front two tires.
 		wheelColliders[2].steerAngle = steerAngle;
 		wheelColliders[3].steerAngle = steerAngle;

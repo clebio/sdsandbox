@@ -107,14 +107,14 @@ public class Logger : MonoBehaviour {
 
     string GetLogPath()
     {
-        if(GlobalState.log_path != "default")
-            return GlobalState.log_path + "/";
-
+        // if(GlobalState.log_path != "default")
+        //     return GlobalState.log_path + "/";
         return Application.dataPath + "/../log/";
     }
 
 	void Awake()
 	{
+        Debug.Log("Logger Awake start");
 		car = carObj.GetComponent<ICar>();
 
 		if(bDoLog && car != null)
@@ -126,11 +126,12 @@ public class Logger : MonoBehaviour {
 
 			string filename = GetLogPath() + outputFilename;
 
-			writer = new StreamWriter(filename);
+            if(UdacityStyle || DonkeyStyle2) {
+			    writer = new StreamWriter(filename);
+			    Debug.Log("Opening file for log at: " + filename);
+            }
 
-			Debug.Log("Opening file for log at: " + filename);
-
-			if(UdacityStyle)
+			if(UdacityStyle && writer != null)
 			{
 				writer.WriteLine("center,left,right,steering,throttle,brake,speed");
 			}
@@ -154,11 +155,21 @@ public class Logger : MonoBehaviour {
             logDisplay = go.GetComponent<Text>();
 
         imagesToSave = new List<ImageSaveJob>();
-
 		thread = new Thread(SaverThread);
-		thread.Start();
+		thread.Start(); 
+        LogAppend("Logger Awake done");
 	}
-		
+
+    void LogAppend(string text) {
+        if (logDisplay != null)
+            logDisplay.text += text + "\n";
+    }
+
+    void LogOverwrite(string text) {
+        if (logDisplay != null)
+            logDisplay.text = text + "\n";
+    }
+
 	// Update is called once per frame
 	void Update () 
 	{
@@ -244,9 +255,6 @@ public class Logger : MonoBehaviour {
         }
 
         frameCounter = frameCounter + 1;
-
-        if (logDisplay != null)
-            logDisplay.text = "Log:" + frameCounter;
 	}
 
 	string GetUdacityStyleImageFilename()
@@ -284,37 +292,31 @@ public class Logger : MonoBehaviour {
 
             ImageSaveJob ij = new ImageSaveJob();
 
+            ij.bytes = image.EncodeToJPG();
 			if(UdacityStyle)
 			{
 				ij.filename = GetUdacityStyleImageFilename();
-
-				ij.bytes = image.EncodeToJPG();
 			}
             else if (DonkeyStyle)
             {
                 ij.filename = GetDonkeyStyleImageFilename();
-
-                ij.bytes = image.EncodeToJPG();
             }
             else if (DonkeyStyle2)
             {
                 ij.filename = GetDonkey2StyleImageFilename();
 
-                ij.bytes = image.EncodeToJPG();
             }
 			else if(SharkStyle)
             {
                 ij.filename = GetSharkStyleImageFilename();
-
-                ij.bytes = image.EncodeToJPG();
             }
 			else
 			{
             	ij.filename = GetLogPath() + string.Format("{0}_{1,8:D8}{2}.png", prefix, frameCounter, suffix);
-
             	ij.bytes = image.EncodeToPNG();
 			}
 
+            LogOverwrite("saving: " + ij.filename);
             lock (this)
             {
                 imagesToSave.Add(ij);
@@ -336,10 +338,10 @@ public class Logger : MonoBehaviour {
 			if(count > 0)
 			{
 				ImageSaveJob ij = imagesToSave[0];
-
-                //Debug.Log("saving: " + ij.filename);
-
-                File.WriteAllBytes(ij.filename, ij.bytes);
+                if(Directory.Exists(Path.GetDirectoryName(ij.filename)))
+                    File.WriteAllBytes(ij.filename, ij.bytes);
+                else
+                    Directory.CreateDirectory(Path.GetDirectoryName(ij.filename));
 
 				lock(this)
 				{
@@ -362,13 +364,20 @@ public class Logger : MonoBehaviour {
 			thread.Abort();
 			thread = null;
 		}
+        lock(this) {
+            imagesToSave = null;
+        }
 
-		bDoLog = false;
 	}
 
 	void OnDestroy()
 	{
 		Shutdown();
+		bDoLog = false;
 	}
+
+    void OnDisable() {
+        Shutdown();
+    }
 }
 
